@@ -44,6 +44,18 @@ Se você não precisa de todos os recursos, dá para instalar só os extras rele
 pip install "headroom-ai[proxy,mcp,code]"
 ```
 
+### Problema comum: `externally-managed-environment` (Debian/Ubuntu com Python 3.12+)
+
+Distribuições recentes bloqueiam `pip install` fora de um ambiente virtual (PEP 668). O `instalar.sh` já trata isso automaticamente: tenta `pip install --user`, se falhar por esse motivo tenta `pipx`, e se `pipx` não existir cria um ambiente virtual dedicado em `~/.local/share/headroom/venv` com um atalho em `~/.local/bin/headroom`. Se estiver instalando manualmente, faça o mesmo:
+
+```bash
+python3 -m venv ~/.local/share/headroom/venv
+~/.local/share/headroom/venv/bin/pip install "headroom-ai[all]"
+ln -s ~/.local/share/headroom/venv/bin/headroom ~/.local/bin/headroom
+```
+
+Evite usar `--break-system-packages` — ele contorna a proteção instalando direto no Python do sistema, com risco de quebrar pacotes geridos pelo `apt`.
+
 ### Problemas comuns de instalação (ambientes corporativos com SSL inspection)
 
 Se o `pip install` falhar por erro de certificado:

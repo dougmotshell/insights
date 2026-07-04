@@ -60,12 +60,52 @@ fi
 # 1. Instalar o Headroom
 # ---------------------------------------------------------------------------
 
+VENV_DIR="$HOME/.local/share/headroom/venv"
+SHIM_DIR="$HOME/.local/bin"
+SHIM_PATH="$SHIM_DIR/headroom"
+
+install_via_dedicated_venv() {
+  info "Criando ambiente virtual dedicado em $VENV_DIR (não mexe no Python do sistema)..."
+  python3 -m venv "$VENV_DIR"
+  "$VENV_DIR/bin/python" -m pip install --upgrade pip >/dev/null
+  if ! "$VENV_DIR/bin/python" -m pip install "headroom-ai[all]"; then
+    return 1
+  fi
+  mkdir -p "$SHIM_DIR"
+  cat > "$SHIM_PATH" <<EOF
+#!/usr/bin/env bash
+exec "$VENV_DIR/bin/headroom" "\$@"
+EOF
+  chmod +x "$SHIM_PATH"
+  return 0
+}
+
 if command -v headroom >/dev/null 2>&1; then
   ok "Headroom já instalado ($(headroom --version 2>/dev/null || echo 'versão desconhecida')). Pulando instalação."
 else
-  info "Instalando headroom-ai[all] via pip..."
-  if ! python3 -m pip install --user "headroom-ai[all]"; then
-    err "Falha ao instalar via pip."
+  info "Instalando headroom-ai[all] via pip (--user)..."
+  PIP_OUTPUT="$(python3 -m pip install --user "headroom-ai[all]" 2>&1)" && PIP_STATUS=0 || PIP_STATUS=$?
+
+  if [ "$PIP_STATUS" -ne 0 ] && echo "$PIP_OUTPUT" | grep -qi "externally-managed-environment"; then
+    warn "Este sistema usa Python 'externally managed' (PEP 668): pip --user recusou instalar globalmente."
+    if command -v pipx >/dev/null 2>&1; then
+      info "pipx encontrado. Instalando headroom-ai[all] via pipx..."
+      if pipx install "headroom-ai[all]"; then
+        PIP_STATUS=0
+      else
+        warn "Falha ao instalar via pipx. Tentando ambiente virtual dedicado..."
+        install_via_dedicated_venv && PIP_STATUS=0 || PIP_STATUS=1
+      fi
+    else
+      info "pipx não encontrado. Criando ambiente virtual dedicado só para o Headroom..."
+      install_via_dedicated_venv && PIP_STATUS=0 || PIP_STATUS=1
+    fi
+  elif [ "$PIP_STATUS" -ne 0 ]; then
+    echo "$PIP_OUTPUT" >&2
+  fi
+
+  if [ "$PIP_STATUS" -ne 0 ]; then
+    err "Falha ao instalar o Headroom."
     warn "Se você está em uma rede corporativa com SSL inspection, veja a seção"
     warn "'Problemas comuns de instalação' em tutorial-configuracao.md (instalar Rust"
     warn "manualmente e exportar REQUESTS_CA_BUNDLE / SSL_CERT_FILE)."
