@@ -14,3 +14,7 @@ Thumbs.db
 
 # Dependencies (uncomment/extend once a stack is chosen)
 node_modules/
+
+# Local tool state (Headroom / TokenSave runtime data, machine-specific)
+.headroom/
+.tokensave/
