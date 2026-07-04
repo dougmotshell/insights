@@ -2,6 +2,8 @@
 
 > Passo a passo para instalar o Headroom localmente e ligá-lo às ferramentas de IA que você já usa. Baseado no README oficial de [github.com/chopratejas/headroom](https://github.com/chopratejas/headroom) e na [documentação oficial](https://headroom-docs.vercel.app/docs). Confirme sempre a versão mais recente no repositório, pois o projeto está em desenvolvimento ativo.
 
+> **Atalho:** os passos 1 a 3 abaixo estão automatizados em [`instalar.sh`](./instalar.sh). Rode `./instalar.sh` para instalar o Headroom e configurar automaticamente o wrapper das ferramentas que já estiverem no seu PATH (Claude Code, Codex, Aider, etc). O passo a passo manual abaixo continua útil para entender o que o script faz, ou para configurar ferramentas sem detecção automática (Cursor, Copilot).
+
 ## 0. Pré-requisitos
 
 - **Python 3.10+** (recomendado 3.13, necessário se você quiser que o dashboard mostre economia em dólares via LiteLLM)
